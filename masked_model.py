@@ -1,21 +1,15 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import torch
 import torch.optim as optim
-from torch.utils.data import DataLoader, random_split, SubsetRandomSampler, Subset, WeightedRandomSampler
+from torch.utils.data import DataLoader, random_split
 import torchvision
 from torch.autograd import Variable
 from torchvision.datasets import ImageFolder, DatasetFolder
 import torchvision.transforms as transforms
-from sklearn.metrics import confusion_matrix, classification_report
 import os
-
 import PIL
 from PIL import Image
-import warnings
-from tqdm import tqdm
-import time
 import warnings
 from net import *
 
@@ -43,7 +37,7 @@ def retrieveData():
 	for i in range(0, len(classes)):
 		dataset.class_idx[classes[i]] = i
 
-	print(dataset.class_idx)
+	#print(dataset.class_idx)
 
 	# invert the class to index dictionary to create index to class dictionary
 	idx_class = {v: k for k, v in dataset.class_idx.items()}
@@ -110,8 +104,7 @@ def train(net, loss_fn, opt, trainloader, epochs):
     min_loss = 99999
     outtxt = ""
 
-    for epoch in tqdm(range(1, epochs+1), total=epochs, desc='Training'):
-    	time.sleep(0.1)
+    for epoch in range(1, epochs+1):
     	running_loss = 0.0
     	loss_list = []
     	net.train() # Setting the neural network to TRAIN mode
@@ -145,7 +138,7 @@ def train(net, loss_fn, opt, trainloader, epochs):
     print(outtxt)
     return None
 	    
-
+'''
 if __name__ == '__main__':
 	#Load the image data in
 	train_loader, test_loader = retrieveData()
@@ -165,4 +158,4 @@ if __name__ == '__main__':
 	train(net, criterion, optimiser, train_loader, 2)
 	print('Training Complete')
 
-
+'''

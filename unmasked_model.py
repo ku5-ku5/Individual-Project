@@ -1,15 +1,13 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import torch
 import torch.optim as optim
-from torch.utils.data import DataLoader, random_split#, SubsetRandomSampler, Subset, WeightedRandomSampler
+from torch.utils.data import DataLoader, random_split
 import torchvision
 from torch.autograd import Variable
 from torchvision.datasets import ImageFolder, DatasetFolder
 import torchvision.transforms as transforms
 import os
-
 import PIL
 from PIL import Image
 import warnings
@@ -163,53 +161,4 @@ if __name__ == '__main__':
 	#epochs = input("Enter number of epochs: ")
 	train(net, criterion, optimiser, train_loader, 1)
 	print('Training Complete')
-'''
-
-
-
-'''
-	true_pos = 0
-	false_pos = 0
-	false_neg = 0
-	total = 0
-	correct = 0
-	with torch.no_grad():
-	    for data in test_loader:
-	        images, labels = data[0].to(device), data[1].to(device)
-	        outputs = net(images)
-	        _, predicted = torch.max(outputs.data, 1)
-
-	        total += labels.size(0)
-	        correct += (predicted == labels).sum().item()
-	        for i in range(3):
-	        	if predicted[i].item() == labels[i].item():
-	        		true_pos += 1 
-	        	elif (predicted[i].item() == 1) and (labels[i].item() == 0):
-	        		false_pos += 1
-	        	else:
-	        		false_neg += 1
-
-
-	print(false_pos)
-	print(false_neg)
-	print(true_pos)
-	print(total)
-	print(correct)
-
-	def Precision(true_pos, false_neg):
-		return(true_pos / (true_pos + false_neg))
-
-
-	def Recall(true_pos, false_pos):
-		return(true_pos / (true_pos + false_pos))
-
-	def F1(true_pos, false_pos, false_neg):
-		p = Precision(true_pos, false_neg)
-		r = Recall(true_pos, false_pos)
-		return(2 * ((p * r) / (p + r)))
-
-	print("Precision: " + str(Recall(true_pos, false_neg)))
-	print("Recall: " + str(Precision(true_pos, false_pos)))
-	print("F1: " + str(F1(true_pos, false_pos, false_neg)))
-
 '''

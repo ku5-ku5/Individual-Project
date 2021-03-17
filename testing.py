@@ -3,19 +3,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import torch
-#import torch.optim as optim
-#from torch.utils.data import DataLoader, random_split, SubsetRandomSampler, Subset, WeightedRandomSampler
 import torchvision
 from torch.autograd import Variable
-#from torchvision.datasets import ImageFolder, DatasetFolder
-#import torchvision.transforms as transforms
-#import os
 
 import PIL
 from PIL import Image
-#from tqdm import tqdm
-#import time
-#import warnings
 from net import *
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
