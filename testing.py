@@ -30,9 +30,6 @@ def confusion_matrix(net, testloader):
 
 	#initialise a 2x2 matrix to store the values in
 	matrix = np.zeros((2,2),dtype=int)
-	#keys = ["TP", "FP", "FN", "TN"]
-
-	#matrix = dict.fromkeys(keys, 0)
 
 	with torch.no_grad():
 	    for data in testloader:
@@ -42,15 +39,19 @@ def confusion_matrix(net, testloader):
 
 	        for i in range(images.size()[0]):
 	        	if predicted[i].item() == 1 and labels[i].item() == 1:
+
 	        		#Identify true positive
 	        		matrix[0][0] += 1
 	        	elif predicted[i].item() == 1 and labels[i].item() == 0: 
+
 	        		#identify false positive 
 	        		matrix[0][1] += 1
 	        	elif predicted[i].item() == 0 and labels[i].item() == 1:
+
 	        		#identify false negative
 	        		matrix[1][0] += 1
 	        	else:
+	        		
 	        		#identify true negative 
 	        		matrix[1][1] += 1
 	return(matrix)

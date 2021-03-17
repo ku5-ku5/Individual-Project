@@ -115,11 +115,17 @@ def train(net, criterion, optimiser, trainloader, epochs):
     	for i, data in enumerate(trainloader, 0):
     		inputs, labels = data[0].to(device), data[1].to(device) 
 
+    		#reset gradients to zero
     		optimiser.zero_grad() 
 
+    		#forward propagation
     		outputs = net(inputs)
     		loss = criterion(outputs, labels)
+
+    		#backwards propagation
     		loss.backward()
+
+    		#optimise
     		optimiser.step()
     		loss_list.append(loss.item()) 
     	loss = sum(loss_list) / len(loss_list)
