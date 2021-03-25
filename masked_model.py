@@ -12,6 +12,10 @@ import PIL
 from PIL import Image
 import warnings
 from net import *
+import matplotlib.pyplot as plt
+from bokeh.plotting import figure
+from bokeh.io import show
+from bokeh.models import LinearAxis, Range1d
 
 warnings.filterwarnings("ignore")
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -99,10 +103,12 @@ def classAccuracies(net, trainloader):
 		outtxt += 'Accuracy of ' + str(classes[i]) + ": " + str(accuracy) + "\n"
 	return(outtxt)
 
-def train(net, loss_fn, opt, trainloader, epochs):
+def train(net, criterion, optimiser, trainloader, epochs):
     #num_steps = 0
     min_loss = 99999
     outtxt = ""
+    accs = []
+    losses = []
 
     for epoch in range(1, epochs+1):
     	running_loss = 0.0
@@ -117,9 +123,18 @@ def train(net, loss_fn, opt, trainloader, epochs):
     		loss = criterion(outputs, labels)
     		loss.backward()
     		optimiser.step()
-    		loss_list.append(loss.item()) 
+    		loss_list.append(loss.item())
+
+    		#total = labels.size(0)
+    		#_, predicted = torch.max(outputs.data, 1)
+    		#correct = (predicted == labels).sum().item()
+    		#accs.append(float(correct / total) * 100)
+    		#losses.append(float(loss))
     	loss = sum(loss_list) / len(loss_list)
     	acc = evaluate(net, trainloader) 
+
+    	accs.append(acc)
+    	losses.append(loss)
 
     	#Add accuracy and loss stats to output
 
@@ -135,7 +150,16 @@ def train(net, loss_fn, opt, trainloader, epochs):
     		min_loss = loss
     		bestmodel = net.state_dict()
     #torch.save(bestmodel,'masked_model.pth')
-    print(outtxt)
+    print(accs)
+    print(losses)
+
+    #x_upper = len(trainloader) * epochs
+    p = figure(y_axis_label='Loss', width=850, y_range=(0, 5), x_range=(0, epochs), title='PyTorch ConvNet results')
+    p.extra_y_ranges = {'Accuracy': Range1d(start=0, end=100)}
+    p.add_layout(LinearAxis(y_range_name='Accuracy', axis_label='Accuracy (%)'), 'right')
+    p.line(np.arange(len(losses)), losses)
+    p.line(np.arange(len(losses)), np.array(accs), y_range_name='Accuracy', color='red')
+    show(p)
     return None
 	    
 '''

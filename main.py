@@ -1,4 +1,4 @@
-from unmasked_model import *
+from masked_model import *
 from testing import *
 
 
@@ -18,7 +18,7 @@ if __name__ == '__main__':
 	# epoch = a full iteration of training
 
 	#epochs = input("Enter number of epochs: ")
-	train(net, criterion, optimiser, train_loader, 1)
+	train(net, criterion, optimiser, train_loader, 5)
 	print('Training Complete')
 
 	conf_matrix = confusion_matrix(net, test_loader)
