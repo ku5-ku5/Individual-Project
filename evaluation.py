@@ -12,94 +12,107 @@ import PIL
 from PIL import Image
 import warnings
 from net import *
+import matplotlib.pyplot as plt
+from  torch.nn.modules.upsampling import Upsample
 
 
-net = Net()
-net.load_state_dict(torch.load('masked_model.pth'))
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+classes = ["negative_data", "without_mask"]
 
 
-net.to(device)
 
 
-for child in net.children():
-	print(child)
+def retrieveImages():
 
 
-#Load model
+	image_transforms = transforms.Compose(
+	                   [transforms.Resize((32,32)),
+	                    transforms.ToTensor(),
+	                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 
-#Load image
+	data_dir = './data/training/maskless_training'
+
+	dataset = ImageFolder(
+	                      root = data_dir,
+	                      transform = image_transforms
+	                       )
+
+	dataset.class_idx = {}
+
+	for i in range(0, len(classes)):
+		dataset.class_idx[classes[i]] = i
+
+	print(dataset.class_idx)
+
+	eval_loader = DataLoader(dataset=dataset, shuffle=False, batch_size=1, num_workers=2)
 
 
-#CAM function
+	return(eval_loader)
 
 
-#show output image with heatmap
 
-'''
 
 params = list(Net().parameters())
 weight = np.squeeze(params[-1].data.numpy())
 
-def return_CAM(feature_conv, weight, class_idx):
-    # generate the class -activation maps upsample to 256x256
-    size_upsample = (256, 256)
-    bz, nc, h, w = feature_conv.shape
-    output_cam = []
-    for idx in class_idx:
-        beforeDot =  feature_conv.reshape((nc, h*w))
-        cam = np.matmul(weight[idx], beforeDot)
-        cam = cam.reshape(h, w)
-        cam = cam - np.min(cam)
-        cam_img = cam / np.max(cam)
-        cam_img = np.uint8(255 * cam_img)
-        output_cam.append(cv2.resize(cam_img, size_upsample))
-    return output_cam
+
+def run_CAM(net, evalloader, weight):
+    net.eval()
+    for i, images in enumerate(evalloader, 0):
+    	image, label = images[0].to(device), images[1].to(device)
+    	img = net(image)
+    	h_x = F.softmax(img, dim=1).data.squeeze()
+
+    	probs, idx = h_x.sort(0, True)
+    	probs = probs.detach().cpu().numpy()
+    	idx = idx.cpu().numpy()
+
+    	pred_labels = idx[0]
+    	predicted = evalloader.dataset.classes[idx[0]]
+
+    	ground_truth = evalloader.dataset.classes[label]
+
+    	activation = {}
+
+    	def get_activation(name):
+    		def hook(model, input, output):
+    			activation[name] = output.detach()
+    		return hook
+
+    	net.conv1.register_forward_hook(get_activation('conv1'))
+    	data, _ = image, label
+    	output = net(data)
+    	act = activation['conv1'].squeeze()
+
+    	fig, axarr = plt.subplots(act.size(0))
+    	
+    	for idx in range(act.size(0)):
+    		axarr[idx].imshow(act[idx].cpu())
+    	
+    	plt.show()
+
+if __name__ == '__main__':
+
+	#Load model
+
+	net = Net()
+	net.to(device)
+	net.load_state_dict(torch.load('masked_model.pth'))
+
+	params = list(Net().parameters())
+	weight = np.squeeze(params[-1].data.numpy())
+
+	#Load images
+
+	evalloader = retrieveImages()
 
 
-'''
 
-normalize = transforms.Normalize(
-   mean=[0.485, 0.456, 0.406],
-   std=[0.229, 0.224, 0.225]
-)
-preprocess = transforms.Compose([
-   transforms.Resize((224,224)),
-   transforms.ToTensor(),
-   normalize
-])
+	run_CAM(net, evalloader, weight)
+
+	#CAM function
 
 
-for fname in IMG_URL:
-    
-    fname = fname.rstrip('\n')    
-    img_pil = Image.open(org_loc+fname+'.png')
-    img_tensor = preprocess(img_pil)
-    img_variable = Variable(img_tensor.unsqueeze(0))
-    logit = model(img_variable)
-
-    h_x = F.softmax(logit, dim=1).data.squeeze()
- 
-    probs, idx = h_x.sort(0, True)
-    probs = probs.detach().numpy()
-    idx = idx.numpy()
-    
-    predicted_labels.append(idx[0])
-    predicted =  train_loader.dataset.classes[idx[0]]
-    
-    print("Target: " + fname + " | Predicted: " +  predicted) 
- 
-    features_blobs = mod(img_variable)
-    features_blobs1 = features_blobs.cpu().detach().numpy()
-    CAMs = return_CAM(features_blobs1, weight, [idx[0]])
-
-    readImg = org_loc+fname+'.png'
-    img = cv2.imread(readImg)
-    height, width, _ = img.shape
-    heatmap = cv2.applyColorMap(cv2.resize(CAMs[0],(width, height)), cv2.COLORMAP_JET)
-    result = heatmap * 0.5 + img * 0.5
-  
-    cv2.imwrite("image_1", result)
-
+	#show output image with heatmap
