@@ -4,7 +4,7 @@ from testing import *
 
 if __name__ == '__main__':
 	#Load the image data in
-	train_loader, test_loader = retrieveData()
+	train_loader, test_loader = retrieveMaskData()
 
 	net = Net()
 	net.to(device)

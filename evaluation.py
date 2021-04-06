@@ -18,7 +18,7 @@ import cv2
 
 
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 classes = ["negative_data", "with_mask"]
 
 
@@ -105,7 +105,7 @@ def run_CAM(net, evalloader, weight):
     	
     	for i in range(act.size(0)):
     		plots[i].imshow(act[i].cpu())
-    	img.squeeze(0)
+    	#img.squeeze(0)
     	'''
     	t = transforms.Compose([transforms.Resize(28)])
     	new = t(data)
@@ -120,7 +120,7 @@ def run_CAM(net, evalloader, weight):
     	#new = torch.reshape(image, (28, 28))
 
     	#plots[6].imshow(new.cpu())
-    	break
+    	#break
     	plt.show()
     	#act = act.unsqueeze(2)
     	#print(act.shape)
@@ -129,24 +129,22 @@ def run_CAM(net, evalloader, weight):
 if __name__ == '__main__':
 
 	#Load model
+    net = Net()
+    net.to(device)
 
-	net = Net()
-	net.to(device)
-	net.load_state_dict(torch.load('masked_model.pth'))
+    net.load_state_dict(torch.load('masked_model.pth', map_location=torch.device(device)))
 
 	#params = list(Net().parameters())
 	#weight = np.squeeze(params[-1].data.numpy())
 
-	weight_softmax_params = list(net._modules.get('conv1').parameters())
-	weight_softmax = np.squeeze(weight_softmax_params[0].cpu().data.numpy())
+    weight_softmax_params = list(net._modules.get('conv1').parameters())
+    weight_softmax = np.squeeze(weight_softmax_params[0].cpu().data.numpy())
 
-	#Load images
+    #Load images
 
-	evalloader = retrieveImages()
+    evalloader = retrieveImages()
 
-
-
-	run_CAM(net, evalloader, weight_softmax)
+    run_CAM(net, evalloader, weight_softmax)
 
 	#CAM function
 

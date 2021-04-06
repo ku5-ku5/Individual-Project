@@ -21,7 +21,7 @@ warnings.filterwarnings("ignore")
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 classes = ["negative_data", "with_mask"]
 
-def retrieveData():
+def retrieveMaskData():
 
 	image_transforms = transforms.Compose(
 	                   [transforms.Resize((32,32)),

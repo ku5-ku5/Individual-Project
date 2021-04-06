@@ -58,10 +58,5 @@ def confusion_matrix(net, testloader):
 
 
 
-#net = Net()
-#net.load_state_dict(torch.load('masked_model.pth'))
-
-
-
 
 
