@@ -41,8 +41,6 @@ def retrieveData():
 	for i in range(0, len(classes)):
 		dataset.class_idx[classes[i]] = i
 
-	#print(dataset.class_idx)
-
 	# invert the class to index dictionary to create index to class dictionary
 	idx_class = {v: k for k, v in dataset.class_idx.items()}
 
@@ -153,12 +151,17 @@ def train(net, criterion, optimiser, trainloader, epochs):
     print(accs)
     print(losses)
 
+    upper = len(losses) + 1
+    x = [i for i in range(1, upper)]
+
     #x_upper = len(trainloader) * epochs
-    p = figure(y_axis_label='Loss', width=850, y_range=(0, 5), x_range=(0, epochs), title='PyTorch ConvNet results')
+    p = figure(y_axis_label='Loss', width=850, y_range=(0, 5), x_range=(1, epochs), title='Accuracy and Loss of Masked Model')
     p.extra_y_ranges = {'Accuracy': Range1d(start=0, end=100)}
-    p.add_layout(LinearAxis(y_range_name='Accuracy', axis_label='Accuracy (%)'), 'right')
-    p.line(np.arange(len(losses)), losses)
-    p.line(np.arange(len(losses)), np.array(accs), y_range_name='Accuracy', color='red')
+    p.add_layout(LinearAxis(y_range_name='Accuracy', axis_label='Accuracy'), 'right')
+    #p.line(np.arange(len(losses)), losses)
+    #p.line(np.arange(len(losses)), np.array(accs), y_range_name='Accuracy', color='red')
+    p.line(x, losses, legend_label = "Loss")
+    p.line(x, accs, y_range_name = "Accuracy", color = 'red', legend_label = "Accuracy")
     show(p)
     return None
 	    

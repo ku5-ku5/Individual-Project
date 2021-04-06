@@ -14,11 +14,12 @@ import warnings
 from net import *
 import matplotlib.pyplot as plt
 from  torch.nn.modules.upsampling import Upsample
+import cv2
 
 
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-classes = ["negative_data", "without_mask"]
+classes = ["negative_data", "with_mask"]
 
 
 
@@ -32,7 +33,7 @@ def retrieveImages():
 	                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 
-	data_dir = './data/training/maskless_training'
+	data_dir = './data/evaluation'
 
 	dataset = ImageFolder(
 	                      root = data_dir,
@@ -44,8 +45,6 @@ def retrieveImages():
 	for i in range(0, len(classes)):
 		dataset.class_idx[classes[i]] = i
 
-	print(dataset.class_idx)
-
 	eval_loader = DataLoader(dataset=dataset, shuffle=False, batch_size=1, num_workers=2)
 
 
@@ -54,8 +53,22 @@ def retrieveImages():
 
 
 
-params = list(Net().parameters())
-weight = np.squeeze(params[-1].data.numpy())
+#params = list(Net().parameters())
+#weight = np.squeeze(params[-2].data.numpy())
+
+
+
+def return_CAM(feature_conv, weight, class_idx):
+	size_upsample = (256, 256)
+	_, nc, h, w = feature_conv.shape
+	output_cam = []
+	for idx in class_idx:
+		cam = weight[idx].dot(feature_conv.reshape((nc, h * w)))
+		cam = cam.reshape(h, w)
+		cam = cam - np.min(cam)
+		cam_img = cam / np.max(cam)
+	return(cam_img)
+
 
 
 def run_CAM(net, evalloader, weight):
@@ -63,9 +76,9 @@ def run_CAM(net, evalloader, weight):
     for i, images in enumerate(evalloader, 0):
     	image, label = images[0].to(device), images[1].to(device)
     	img = net(image)
-    	h_x = F.softmax(img, dim=1).data.squeeze()
+    	probabilities = F.softmax(img, dim=1).data.squeeze()
 
-    	probs, idx = h_x.sort(0, True)
+    	probs, idx = probabilities.sort(0, True)
     	probs = probs.detach().cpu().numpy()
     	idx = idx.cpu().numpy()
 
@@ -74,8 +87,9 @@ def run_CAM(net, evalloader, weight):
 
     	ground_truth = evalloader.dataset.classes[label]
 
-    	activation = {}
+    	print("Predicted: " + predicted + ", Ground Truth: " + ground_truth)
 
+    	activation = {}
     	def get_activation(name):
     		def hook(model, input, output):
     			activation[name] = output.detach()
@@ -83,15 +97,34 @@ def run_CAM(net, evalloader, weight):
 
     	net.conv1.register_forward_hook(get_activation('conv1'))
     	data, _ = image, label
+    	data.unsqueeze(0)
     	output = net(data)
     	act = activation['conv1'].squeeze()
 
-    	fig, axarr = plt.subplots(act.size(0))
+    	fig, plots = plt.subplots(act.size(0))
     	
-    	for idx in range(act.size(0)):
-    		axarr[idx].imshow(act[idx].cpu())
-    	
+    	for i in range(act.size(0)):
+    		plots[i].imshow(act[i].cpu())
+    	img.squeeze(0)
+    	'''
+    	t = transforms.Compose([transforms.Resize(28)])
+    	new = t(data)
+    	new = new / 2 + 0.5
+    	npimg = new.cpu().numpy()
+'''
+    	#npimg.detach()
+    	#plots[6].imshow(np.transpose(npimg, (28, 28)))
+    	#print(npimg.shape)
+
+
+    	#new = torch.reshape(image, (28, 28))
+
+    	#plots[6].imshow(new.cpu())
+    	break
     	plt.show()
+    	#act = act.unsqueeze(2)
+    	#print(act.shape)
+    	#return_CAM(act, weight, idx)
 
 if __name__ == '__main__':
 
@@ -101,8 +134,11 @@ if __name__ == '__main__':
 	net.to(device)
 	net.load_state_dict(torch.load('masked_model.pth'))
 
-	params = list(Net().parameters())
-	weight = np.squeeze(params[-1].data.numpy())
+	#params = list(Net().parameters())
+	#weight = np.squeeze(params[-1].data.numpy())
+
+	weight_softmax_params = list(net._modules.get('conv1').parameters())
+	weight_softmax = np.squeeze(weight_softmax_params[0].cpu().data.numpy())
 
 	#Load images
 
@@ -110,7 +146,7 @@ if __name__ == '__main__':
 
 
 
-	run_CAM(net, evalloader, weight)
+	run_CAM(net, evalloader, weight_softmax)
 
 	#CAM function
 

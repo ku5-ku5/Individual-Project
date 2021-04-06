@@ -38,8 +38,6 @@ def retrieveData():
 	for i in range(0, len(classes)):
 		dataset.class_idx[classes[i]] = i
 
-	print(dataset.class_idx)
-
 	# invert the class to index dictionary to create index to class dictionary
 	idx_class = {v: k for k, v in dataset.class_idx.items()}
 
