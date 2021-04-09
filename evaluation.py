@@ -52,12 +52,6 @@ def retrieveImages():
 
 
 
-
-#params = list(Net().parameters())
-#weight = np.squeeze(params[-2].data.numpy())
-
-
-
 def return_CAM(feature_conv, weight, class_idx):
 	size_upsample = (256, 256)
 	_, nc, h, w = feature_conv.shape
@@ -105,22 +99,7 @@ def run_CAM(net, evalloader, weight):
     	
     	for i in range(act.size(0)):
     		plots[i].imshow(act[i].cpu())
-    	#img.squeeze(0)
-    	'''
-    	t = transforms.Compose([transforms.Resize(28)])
-    	new = t(data)
-    	new = new / 2 + 0.5
-    	npimg = new.cpu().numpy()
-'''
-    	#npimg.detach()
-    	#plots[6].imshow(np.transpose(npimg, (28, 28)))
-    	#print(npimg.shape)
 
-
-    	#new = torch.reshape(image, (28, 28))
-
-    	#plots[6].imshow(new.cpu())
-    	#break
     	plt.show()
     	#act = act.unsqueeze(2)
     	#print(act.shape)
@@ -146,7 +125,6 @@ if __name__ == '__main__':
 
     run_CAM(net, evalloader, weight_softmax)
 
-	#CAM function
+    #net.load_state_dict(torch.load('unmasked_model.pth', map_location=torch.device(device)))
 
-
-	#show output image with heatmap
+    #run_CAM(net, evalloader, weight_softmax)

@@ -13,15 +13,12 @@ from PIL import Image
 import warnings
 from net import *
 import matplotlib.pyplot as plt
-from bokeh.plotting import figure
-from bokeh.io import show
-from bokeh.models import LinearAxis, Range1d
 
 warnings.filterwarnings("ignore")
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-classes = ["negative_data", "with_mask"]
 
-def retrieveData():
+
+def retrieveData(dataDir, classes, img_total):
 
 	image_transforms = transforms.Compose(
 	                   [transforms.Resize((32,32)),
@@ -29,10 +26,8 @@ def retrieveData():
 	                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 
-	data_dir = './data/training/mask_training'
-
 	dataset = ImageFolder(
-	                      root = data_dir,
+	                      root = dataDir,
 	                      transform = image_transforms
 	                       )
 
@@ -55,14 +50,18 @@ def retrieveData():
 	    	count[lbl_idx] += 1
 	    return count
 	print("Distribution of classes: \n", get_class_distribution(dataset))
-	train_dataset, test_dataset = random_split(dataset, (5000, 1851))
+
+	train_split = round(0.85 * img_total)
+	test_split = img_total - train_split
+
+	train_dataset, test_dataset = random_split(dataset, (train_split, test_split))
 
 	train_loader = DataLoader(dataset=train_dataset, shuffle=True, batch_size=4, num_workers=2)
 	test_loader = DataLoader(dataset=test_dataset, shuffle=False, batch_size=4, num_workers=2)
 	print("Length of the train_loader:", len(train_loader))
 	print("Length of the test_loader:", len(test_loader))
 
-	return(train_loader, test_loader)
+	return(train_loader, train_loader)
 
 def evaluate(net, trainloader):
 	correct = 0
@@ -78,7 +77,7 @@ def evaluate(net, trainloader):
 	accuracy = 100 * (correct / total)
 	return(accuracy)
 
-def classAccuracies(net, trainloader):
+def classAccuracies(net, trainloader, classes):
 	class_count = len(classes)
 	class_correct = [0] * class_count
 	class_total = [0] * class_count
@@ -86,12 +85,12 @@ def classAccuracies(net, trainloader):
 	with torch.no_grad():
 		for data in trainloader:
 			images, labels = data[0].to(device), data[1].to(device)
-			outs = net(images)
-			_, predicted = torch.max(outs, 1)
-			correct = (predicted == labels).squeeze()
-			for i in range(3):
+			outputs = net(images)
+			_, predicted = torch.max(outputs, 1)
+			predictions = (predicted == labels).squeeze()
+			for i in range(len(predictions)):
 				label = labels[i]
-				if correct[i].item() == True:
+				if predictions[i].item() == True:
 					class_correct[int(label.item())] += 1
 				class_total[int(label.item())] += 1
 
@@ -101,61 +100,77 @@ def classAccuracies(net, trainloader):
 		outtxt += 'Accuracy of ' + str(classes[i]) + ": " + str(accuracy) + "\n"
 	return(outtxt)
 
-def train(net, lossFn, optimiser, trainloader, epochs):
+def train(net, lossFn, optimiser, classes, trainloader, epochs, filename=""):
     #num_steps = 0
     min_loss = 99999
     outtxt = ""
     accs = []
     losses = []
 
-    for epoch in range(1, epochs+1):
+    savemodel = True
+    if filename == "":
+    	savemodel = False
+
+    for epoch in range(1, epochs + 1):
     	running_loss = 0.0
     	loss_list = []
-    	net.train() # Setting the neural network to TRAIN mode
+
+    	# Set the neural network to train mode
+    	net.train()
     	for i, data in enumerate(trainloader, 0):
     		inputs, labels = data[0].to(device), data[1].to(device) 
 
+    		#reset gradients to zero
     		optimiser.zero_grad() 
 
+    		#forward propagation
     		outputs = net(inputs)
     		loss = lossFn(outputs, labels)
-    		loss.backward()
-    		optimiser.step()
-    		loss_list.append(loss.item())
 
+    		#backward propagation
+    		loss.backward()
+
+    		#optimise
+    		optimiser.step()
+    		loss_list.append(loss.item()) 
     	loss = sum(loss_list) / len(loss_list)
-    	acc = evaluate(net, trainloader) 
+    	acc = evaluate(net, trainloader)
 
     	accs.append(acc)
     	losses.append(loss)
-
     	#Add accuracy and loss stats to output
 
     	outtxt += "\nEpoch: " + str(epoch) + "\nAccuracy: " + str(acc) + "\nloss: " + str(loss) + "\n"
 
     	#Add accuracy of individual classes to output
 
-    	outtxt += classAccuracies(net, trainloader)
+    	outtxt += classAccuracies(net, trainloader, classes)
 
     	#Determine the best model based on loss 
 
     	if loss < min_loss:
     		min_loss = loss
     		bestmodel = net.state_dict()
-    #torch.save(bestmodel,'masked_model.pth')
-    print(accs)
-    print(losses)
+    print(outtxt)
+    fig, a = plt.subplots()
 
     upper = len(losses) + 1
     x = [i for i in range(1, upper)]
 
-    #x_upper = len(trainloader) * epochs
-    p = figure(y_axis_label='Loss', width=850, y_range=(0, 5), x_range=(1, epochs), title='Accuracy and Loss of Masked Model')
-    p.extra_y_ranges = {'Accuracy': Range1d(start=0, end=100)}
-    p.add_layout(LinearAxis(y_range_name='Accuracy', axis_label='Accuracy'), 'right')
-    #p.line(np.arange(len(losses)), losses)
-    #p.line(np.arange(len(losses)), np.array(accs), y_range_name='Accuracy', color='red')
-    p.line(x, losses, legend_label = "Loss")
-    p.line(x, accs, y_range_name = "Accuracy", color = 'red', legend_label = "Accuracy")
-    show(p)
+    a.plot(x, losses, color="blue")
+    a.set_xlabel("Training Iterations", fontsize=12)
+    a.set_ylabel("Loss", fontsize=12, color="blue")
+    b = a.twinx()
+    b.plot(x, accs, color="green")
+    b.set_ylabel("Accuracy (%)", fontsize=12, color="green")
+
+    if savemodel == True:
+    	torch.save(bestmodel, filename + '.pth')
+    	fig.savefig(filename + '.png')
+
+    plt.show()
+
+
+
+
     return None

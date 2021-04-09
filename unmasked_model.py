@@ -99,7 +99,7 @@ def classAccuracies(net, trainloader):
 		outtxt += 'Accuracy of ' + str(classes[i]) + ": " + str(accuracy) + "\n"
 	return(outtxt)
 
-def train(net, criterion, optimiser, trainloader, epochs):
+def train(net, lossFn, optimiser, trainloader, epochs):
     #num_steps = 0
     min_loss = 99999
     outtxt = ""
@@ -118,7 +118,7 @@ def train(net, criterion, optimiser, trainloader, epochs):
 
     		#forward propagation
     		outputs = net(inputs)
-    		loss = criterion(outputs, labels)
+    		loss = lossFn(outputs, labels)
 
     		#backwards propagation
     		loss.backward()
@@ -142,27 +142,6 @@ def train(net, criterion, optimiser, trainloader, epochs):
     	if loss < min_loss:
     		min_loss = loss
     		bestmodel = net.state_dict()
-    #torch.save(bestmodel,'masked_model.pth')
+    torch.save(bestmodel,'unmasked_model.pth')
     print(outtxt)
     return None
-	    
-'''
-if __name__ == '__main__':
-	#Load the image data in
-	train_loader, test_loader = retrieveData()
-
-	net = Net()
-	net.to(device)
-
-	#defining a loss function
-	criterion = nn.CrossEntropyLoss()
-
-	#defining an optimiser
-	optimiser = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
-
-	# epoch = a full iteration of training
-	
-	#epochs = input("Enter number of epochs: ")
-	train(net, criterion, optimiser, train_loader, 1)
-	print('Training Complete')
-'''
