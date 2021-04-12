@@ -100,10 +100,8 @@ def run_CAM(net, evalloader, weight):
     	for i in range(act.size(0)):
     		plots[i].imshow(act[i].cpu())
 
+    	#break
     	plt.show()
-    	#act = act.unsqueeze(2)
-    	#print(act.shape)
-    	#return_CAM(act, weight, idx)
 
 if __name__ == '__main__':
 
