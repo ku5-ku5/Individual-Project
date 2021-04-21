@@ -49,12 +49,37 @@ def confusion_matrix(net, testloader):
 	        	elif predicted[i].item() == 0 and labels[i].item() == 1:
 
 	        		#identify false negative
-	        		matrix[1][0] += 1
+	        		matrix[1][1] += 1
 	        	else:
 	        		
 	        		#identify true negative 
-	        		matrix[1][1] += 1
+	        		matrix[1][0] += 1
 	return(matrix)
+
+def generate_heatmap(conf_matrix):
+	'''
+	[tp, fp
+	 tn, fn]
+
+	'''
+	y_vals = ["Positive", "Negative"]
+	x_vals = ["True", "False"]
+
+	plt.xticks(ticks=np.arange(len(x_vals)),labels=x_vals)
+	plt.yticks(ticks=np.arange(len(y_vals)),labels=y_vals)
+
+	plt.imshow(conf_matrix, cmap='hot',interpolation="nearest")
+	plt.show()
+
+'''
+matrix = np.array([[10, 20],
+	               [4, 50]])
+
+generate_heatmap(matrix)
+'''
+
+
+
 
 
 

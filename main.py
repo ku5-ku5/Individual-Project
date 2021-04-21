@@ -52,14 +52,14 @@ if __name__ == '__main__':
 
 	def calc_stats(conf_matrix):
 		#calculate precision
-		p = Precision(conf_matrix[0][0], conf_matrix[1][0])
+		p = Precision(conf_matrix[0][0], conf_matrix[1][1])
 
 
 		#calculate recall
 		r = Recall(conf_matrix[0][0], conf_matrix[0][1])
 
 		#calculate f1 score
-		f1 = F1(conf_matrix[0][0], conf_matrix[0][1], conf_matrix[1][0])
+		f1 = F1(conf_matrix[0][0], conf_matrix[0][1], conf_matrix[1][1])
 
 		return(p, r, f1)
 
@@ -70,7 +70,7 @@ if __name__ == '__main__':
 			p, r, f1 = calc_stats(i)
 			conf_matrix = i
 			out += "\nTesting Results:\n"
-			out += "\nTrue Positives: " + str(conf_matrix[0][0]) + "\nFalse Positives: " + str(conf_matrix[0][1]) + "\nFalse Negatives: " + str(conf_matrix[1][0]) + "\nTrue Negatives: " + str(conf_matrix[1][1]) + "\nPrecision: " + str(p) + "\nRecall: " + str(r) + "\nF1: " + str(f1)
+			out += "\nTrue Positives: " + str(conf_matrix[0][0]) + "\nFalse Positives: " + str(conf_matrix[0][1]) + "\nFalse Negatives: " + str(conf_matrix[1][1]) + "\nTrue Negatives: " + str(conf_matrix[1][0]) + "\nPrecision: " + str(p) + "\nRecall: " + str(r) + "\nF1: " + str(f1)
 			#print("\nTrue Positives: " + str(conf_matrix[0][0]) + "\nFalse Positives: " + str(conf_matrix[0][1]) + "\nFalse Negatives: " + str(conf_matrix[1][0]) + "\nTrue Negatives: " + str(conf_matrix[1][1]))
 			#print("Precision: " + str(p))
 			#print("Recall: " + str(r))
