@@ -100,16 +100,12 @@ def classAccuracies(net, trainloader, classes):
 		outtxt += 'Accuracy of ' + str(classes[i]) + ": " + str(accuracy) + "\n"
 	return(outtxt)
 
-def train(net, lossFn, optimiser, classes, trainloader, epochs, filename=""):
+def train(net, lossFn, optimiser, classes, trainloader, epochs, filename, savemodel=False):
     #num_steps = 0
     min_loss = 99999
-    outtxt = ""
+    outtxt = '#' * 25 + " " + filename + " Training Results " + '#' * 25 + "\n\n"
     accs = []
     losses = []
-
-    savemodel = True
-    if filename == "":
-    	savemodel = False
 
     for epoch in range(1, epochs + 1):
     	running_loss = 0.0
@@ -152,6 +148,12 @@ def train(net, lossFn, optimiser, classes, trainloader, epochs, filename=""):
     		min_loss = loss
     		bestmodel = net.state_dict()
     print(outtxt)
+
+    #Write the output to the corresponding results file
+    file = open(filename + "_results.txt", 'a')
+    file.write(outtxt + "\n\n")
+    file.close()
+
     fig, a = plt.subplots()
 
     upper = len(losses) + 1
@@ -166,11 +168,8 @@ def train(net, lossFn, optimiser, classes, trainloader, epochs, filename=""):
 
     if savemodel == True:
     	torch.save(bestmodel, filename + '.pth')
-    	fig.savefig(filename + '.png')
+    	fig.savefig(filename + '_model.png')
 
     plt.show()
-
-
-
 
     return None

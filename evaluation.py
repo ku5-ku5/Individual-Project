@@ -66,10 +66,23 @@ def return_CAM(feature_conv, weight, class_idx):
         return(cam_img)
 '''
 
+def create_fig(img_activations, batch_size=5):
+    img_batch = [img_activations[i:i + batch_size] for i in range(0, len(img_activations), batch_size)]
+    for img_list in img_batch:
+        fig, plots = plt.subplots(6, len(img_list))
+        for i in range(len(img_list)):
+                for j in range(6):
+                    plots[j][i].imshow(img_list[i][j].cpu())
+        plt.show()
+        now = datetime.now()
+        dt_string = now.strftime("%d%m%Y%H%M%S")
+        fig.savefig("./figures/" + dt_string + ".png")
+
 
 def run_CAM(net, evalloader, weight):
     net.eval()
     img_activations = []
+
     for i, images in enumerate(evalloader, 0):
         image, label = images[0].to(device), images[1].to(device)
         img = net(image)
@@ -81,9 +94,6 @@ def run_CAM(net, evalloader, weight):
 
         pred_labels = idx[0]
         predicted = evalloader.dataset.classes[idx[0]]
-        #w = weight[:, pred_labels]
-        #w1 = torch.from_numpy(w)
-        #cam = img.dot(w1)
 
         ground_truth = evalloader.dataset.classes[label]
 
@@ -91,40 +101,20 @@ def run_CAM(net, evalloader, weight):
 
         activation = {}
         def get_act(name):
-                def hook(model, input, output):
-                        activation[name] = output.detach()
-                return hook
+            def act_hook(model, input, output):
+                    activation[name] = output.detach()
+            return act_hook
 
         net.conv1.register_forward_hook(get_act('conv1'))
         data, _ = image, label
         data.unsqueeze(0)
         output = net(data)
         act = activation['conv1'].squeeze()
-        #fig, plots = plt.subplots(act.size(0))
-        #out = nnf.interpolate(act, size=32, mode='nearest')
-        #print(out.shape)
         t = transforms.Resize((128,128),interpolation=Image.NEAREST)
         trans = t(act)
         img_activations.append(trans)
+    create_fig(img_activations)
 
-    fig, plots = plt.subplots(6, len(img_activations))
-    for i in range(len(img_activations)):
-            for j in range(6):
-                plots[j][i].imshow(img_activations[i][j].cpu())
-    plt.xticks([])
-    plt.yticks([])
-    plt.show()
-    now = datetime.now()
-    dt_string = now.strftime("%d%m%Y%H%M%S")
-    fig.savefig("./figures/" + dt_string + ".png")
-        #break
-        #plt.show()
-        #print(act.shape)
-        #act = act.unsqueeze(1)
-        #trans = transforms.Compose([transforms.Resize(32)])
-        #tData = trans(act)
-        #print(tData.shape)
-        #return_CAM(tData, weight, idx[0])
 
 if __name__ == '__main__':
 
@@ -133,9 +123,6 @@ if __name__ == '__main__':
     net.to(device)
 
     net.load_state_dict(torch.load('masked_model.pth', map_location=torch.device(device)))
-
-        #params = list(Net().parameters())
-        #weight = np.squeeze(params[-1].data.numpy())
 
     weight_softmax_params = list(net._modules.get('conv1').parameters())
     weight_softmax = np.squeeze(weight_softmax_params[0].cpu().data.numpy())
