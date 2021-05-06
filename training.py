@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+from datetime import datetime
+import time
 import torch
 import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
@@ -103,11 +105,17 @@ def classAccuracies(net, trainloader, classes):
 def train(net, lossFn, optimiser, classes, trainloader, epochs, filename, savemodel=False):
     #num_steps = 0
     min_loss = 99999
-    outtxt = '#' * 25 + " " + filename + " Training Results " + '#' * 25 + "\n\n"
+    now = datetime.now()
+    date_str = now.strftime("%d/%m/%Y")
+    time_str = now.strftime("%H:%M:%S")
+    outtxt = "Date: " + date_str + "\nTime: " + time_str + "\n"
+    outtxt += '#' * 25 + " " + filename + " Training Results " + '#' * 25 + "\n\n"
     accs = []
     losses = []
 
     for epoch in range(1, epochs + 1):
+    	start_time = time.time()
+
     	running_loss = 0.0
     	loss_list = []
 
@@ -128,7 +136,10 @@ def train(net, lossFn, optimiser, classes, trainloader, epochs, filename, savemo
 
     		#optimise
     		optimiser.step()
-    		loss_list.append(loss.item()) 
+    		loss_list.append(loss.item())
+
+    		end_time = time.time()
+    		total_time = end_time - start_time
     	loss = sum(loss_list) / len(loss_list)
     	acc = evaluate(net, trainloader)
 
@@ -141,6 +152,7 @@ def train(net, lossFn, optimiser, classes, trainloader, epochs, filename, savemo
     	#Add accuracy of individual classes to output
 
     	outtxt += classAccuracies(net, trainloader, classes)
+    	outtxt += "\nTraining Iteration Duration: " + str(total_time) + " Seconds\n"
 
     	#Determine the best model based on loss 
 
@@ -159,11 +171,11 @@ def train(net, lossFn, optimiser, classes, trainloader, epochs, filename, savemo
     upper = len(losses) + 1
     x = [i for i in range(1, upper)]
 
-    a.plot(x, losses, color="blue")
+    a.plot(x, losses, color="blue", marker="o")
     a.set_xlabel("Training Iterations", fontsize=12)
     a.set_ylabel("Loss", fontsize=12, color="blue")
     b = a.twinx()
-    b.plot(x, accs, color="green")
+    b.plot(x, accs, color="green", marker="s")
     b.set_ylabel("Accuracy (%)", fontsize=12, color="green")
 
     if savemodel == True:
