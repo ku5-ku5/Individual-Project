@@ -41,7 +41,7 @@ def retrieveData(dataDir, classes, img_total):
 	# invert the class to index dictionary to create index to class dictionary
 	idx_class = {v: k for k, v in dataset.class_idx.items()}
 
-	def get_class_distribution(dataset_obj):
+	def get_dist(dataset_obj):
 	    count = {}
 	    for i in range(0, len(classes)):
 	    	count[classes[i]] = 0
@@ -51,7 +51,11 @@ def retrieveData(dataDir, classes, img_total):
 	    	lbl_idx = idx_class[lbl_idx]
 	    	count[lbl_idx] += 1
 	    return count
-	print("Distribution of classes: \n", get_class_distribution(dataset))
+
+	class_dist = get_dist(dataset)
+	print("Class Distribution:")
+	for i in class_dist.keys():
+		print(i + ": " + str(class_dist[i]))
 
 	train_split = round(0.85 * img_total)
 	test_split = img_total - train_split
@@ -65,7 +69,7 @@ def retrieveData(dataDir, classes, img_total):
 
 	return(train_loader, train_loader)
 
-def evaluate(net, trainloader):
+def calcAccuracy(net, trainloader):
 	correct = 0
 	total = 0
 	with torch.no_grad():
@@ -141,7 +145,7 @@ def train(net, lossFn, optimiser, classes, trainloader, epochs, filename, savemo
     		end_time = time.time()
     		total_time = end_time - start_time
     	loss = sum(loss_list) / len(loss_list)
-    	acc = evaluate(net, trainloader)
+    	acc = calcAccuracy(net, trainloader)
 
     	accs.append(acc)
     	losses.append(loss)

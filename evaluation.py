@@ -26,7 +26,7 @@ classes = ["negative_data", "with_mask"]
 
 
 
-def retrieveImages():
+def retrieveImages(data_dir):
 
 
         image_transforms = transforms.Compose(
@@ -34,8 +34,6 @@ def retrieveImages():
                             transforms.ToTensor(),
                             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-
-        data_dir = './data/evaluation'
 
         dataset = ImageFolder(
                               root = data_dir,
@@ -118,7 +116,7 @@ def run_CAM(net, evalloader, weight):
 
 if __name__ == '__main__':
 
-        #Load model
+    #Load model
     net = Net()
     net.to(device)
 
@@ -129,7 +127,7 @@ if __name__ == '__main__':
 
     #Load images
 
-    evalloader = retrieveImages()
+    evalloader = retrieveImages('./data/evaluation')
 
     run_CAM(net, evalloader, weight_softmax)
 

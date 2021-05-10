@@ -11,6 +11,7 @@ if __name__ == '__main__':
 
 	#create test and train dataloaders for each model
 	mask_train, mask_test = retrieveData("./data/training/mask_training", masked_classes, 6851)
+	
 	face_train, face_test = retrieveData("./data/training//maskless_training", maskless_classes, 6954)
 
 	#epochs = input("Enter number of epochs: ")
