@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import datetime
 import torch
 import torch.optim as optim
+from torch import topk
 from torch.utils.data import DataLoader, random_split
 import torchvision
 from torch.autograd import Variable
@@ -17,6 +18,7 @@ import matplotlib.pyplot as plt
 from  torch.nn.modules.upsampling import Upsample
 import torch.nn.functional as nnf
 import cv2
+import skimage.transform
 
 
 
@@ -51,18 +53,32 @@ def retrieveImages(data_dir):
         return(eval_loader)
 
 
-'''
+
 def return_CAM(feature_conv, weight, class_idx):
         size_upsample = (256, 256)
-        nc, h, w = feature_conv.shape
-        output_cam = []
-        for idx in class_idx:
-                cam = weight[idx].dot(feature_conv.reshape((nc, h * w)))
-                cam = cam.reshape(h, w)
-                cam = cam - np.min(cam)
-                cam_img = cam / np.max(cam)
-        return(cam_img)
-'''
+        bz, nc, h, w = feature_conv.shape
+        cam = weight.dot(feature_conv.reshape((nc, h*w)))
+        cam = cam.reshape(h, w)
+        cam = cam - np.min(cam)
+        cam_img = cam / np.max(cam)
+        cv2.resize(cam_img, size_upsample)
+        return [cam_img]
+        '''
+        #output_cam = []
+        print("Class Index", class_idx)
+        #for idx in class_idx:
+        beforeDot =  feature_conv.reshape((nc, h*w))
+        print(beforeDot.shape)
+        print(weight.shape)
+        cam = np.matmul(weight, beforeDot)
+        cam = cam.reshape(h, w)
+        cam = cam - np.min(cam)
+        cam_img = cam / np.max(cam)
+        cam_img = np.uint8(255 * cam_img)
+        #output_cam.append(cv2.resize(cam_img, size_upsample))
+        return(output_cam)
+        '''
+
 
 def create_fig(img_activations, batch_size=5):
     img_batch = [img_activations[i:i + batch_size] for i in range(0, len(img_activations), batch_size)]
@@ -87,6 +103,7 @@ def run_CAM(net, evalloader, weight):
         probabilities = F.softmax(img, dim=1).data.squeeze()
 
         probs, idx = probabilities.sort(0, True)
+        class_idx = topk(probs,1)[1].int()
         probs = probs.detach().cpu().numpy()
         idx = idx.cpu().numpy()
 
@@ -108,8 +125,22 @@ def run_CAM(net, evalloader, weight):
         data.unsqueeze(0)
         output = net(data)
         act = activation['conv1'].squeeze()
+        x = act[None,:, :, :]
+
+        cam = return_CAM(x, weight, class_idx)
+        #c = torch.as_tensor(cam)
+        #plt.imshow(c.permute(1, 2, 0))
+        #plt.imshow(cam[0], alpha=0.5, cmap='jet')
+        #plt.show()
         t = transforms.Resize((128,128),interpolation=Image.NEAREST)
+        #t_img = t(img)
+        a = image.squeeze()
+        print(a.shape)
+        plt.imshow(a.permute(1, 2, 0))
+        plt.imshow(skimage.transform.resize(cam[0], a.shape[1:3]), alpha=0.5, cmap='jet');
+        plt.show()
         trans = t(act)
+
         img_activations.append(trans)
     create_fig(img_activations)
 
@@ -123,7 +154,9 @@ if __name__ == '__main__':
     net.load_state_dict(torch.load('masked_model.pth', map_location=torch.device(device)))
 
     weight_softmax_params = list(net._modules.get('conv1').parameters())
-    weight_softmax = np.squeeze(weight_softmax_params[0].cpu().data.numpy())
+    weight_softmax = np.squeeze(weight_softmax_params[-1].cpu().data.numpy())
+
+    print(weight_softmax.shape)
 
     #Load images
 

@@ -71,13 +71,6 @@ def generate_heatmap(conf_matrix):
 	plt.imshow(conf_matrix, cmap='hot',interpolation="nearest")
 	plt.show()
 
-'''
-matrix = np.array([[10, 20],
-	               [4, 50]])
-
-generate_heatmap(matrix)
-'''
-
 
 
 
