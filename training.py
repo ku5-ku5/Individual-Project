@@ -10,8 +10,6 @@ from torch.autograd import Variable
 from torchvision.datasets import ImageFolder, DatasetFolder
 import torchvision.transforms as transforms
 import os
-import PIL
-from PIL import Image
 import warnings
 from net import *
 import matplotlib.pyplot as plt
@@ -22,16 +20,15 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 def retrieveData(dataDir, classes, img_total):
 
-	image_transforms = transforms.Compose(
-	                   [transforms.Resize((32,32)),
-	                    transforms.ToTensor(),
-	                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+	#Pre-process the images in the dataset:
+	#1) resize to 32x32
+	#2) convert to a tensor object
+	#3) normalise the image (makes sure they are all centred)
+	image_transforms = transforms.Compose([transforms.Resize((32,32)), transforms.ToTensor(),
+	                   transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-
-	dataset = ImageFolder(
-	                      root = dataDir,
-	                      transform = image_transforms
-	                       )
+	#read in the dataset and apply the previously defined transormations to it
+	dataset = ImageFolder(root=dataDir, transform=image_transforms)
 
 	dataset.class_idx = {}
 
@@ -39,8 +36,9 @@ def retrieveData(dataDir, classes, img_total):
 		dataset.class_idx[classes[i]] = i
 
 	# invert the class to index dictionary to create index to class dictionary
-	idx_class = {v: k for k, v in dataset.class_idx.items()}
+	idx_class = {val: key for key, val in dataset.class_idx.items()}
 
+	# count the number of images in each class
 	def get_dist(dataset_obj):
 	    count = {}
 	    for i in range(0, len(classes)):

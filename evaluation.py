@@ -58,36 +58,31 @@ def return_CAM(feature_conv, weight, class_idx):
         size_upsample = (256, 256)
         bz, nc, h, w = feature_conv.shape
         cam = weight.dot(feature_conv.reshape((nc, h*w)))
+
+        # reshape CAM to match dimensions of activation images
         cam = cam.reshape(h, w)
         cam = cam - np.min(cam)
         cam_img = cam / np.max(cam)
         cv2.resize(cam_img, size_upsample)
         return [cam_img]
-        '''
-        #output_cam = []
-        print("Class Index", class_idx)
-        #for idx in class_idx:
-        beforeDot =  feature_conv.reshape((nc, h*w))
-        print(beforeDot.shape)
-        print(weight.shape)
-        cam = np.matmul(weight, beforeDot)
-        cam = cam.reshape(h, w)
-        cam = cam - np.min(cam)
-        cam_img = cam / np.max(cam)
-        cam_img = np.uint8(255 * cam_img)
-        #output_cam.append(cv2.resize(cam_img, size_upsample))
-        return(output_cam)
-        '''
 
 
-def create_fig(img_activations, batch_size=5):
+def create_fig(img_activations, preds_gt, batch_size=5):
     img_batch = [img_activations[i:i + batch_size] for i in range(0, len(img_activations), batch_size)]
+    index = 0
     for img_list in img_batch:
-        fig, plots = plt.subplots(6, len(img_list))
-        for i in range(len(img_list)):
-                for j in range(6):
-                    plots[j][i].imshow(img_list[i][j].cpu())
+        fig, plots = plt.subplots(6, len(img_list), figsize=(10, 10))
+        for i in range(0, len(img_list)):
+            if preds_gt["Predicted"][((index * batch_size) + i)] == preds_gt["GroundT"][((index * batch_size) + i)]:
+                colour = "green"
+            else:
+                colour = "red"
+            for j in range(6):
+                plots[j][i].imshow(img_list[i][j].cpu())
+                plots[j][i].set_title(preds_gt["Predicted"][((index * batch_size) + i)], color=colour)
+        fig.tight_layout()
         plt.show()
+        index += 1
         now = datetime.now()
         dt_string = now.strftime("%d%m%Y%H%M%S")
         fig.savefig("./figures/" + dt_string + ".png")
@@ -96,6 +91,9 @@ def create_fig(img_activations, batch_size=5):
 def run_CAM(net, evalloader, weight):
     net.eval()
     img_activations = []
+    predictions = []
+    ground_truths = []
+    preds_gt = {"Predicted": [], "GroundT": []}
 
     for i, images in enumerate(evalloader, 0):
         image, label = images[0].to(device), images[1].to(device)
@@ -113,6 +111,11 @@ def run_CAM(net, evalloader, weight):
         ground_truth = evalloader.dataset.classes[label]
 
         print("Predicted: " + predicted + ", Ground Truth: " + ground_truth)
+        predictions.append(predicted)
+        ground_truths.append(ground_truth)
+        preds_gt["Predicted"].append(predicted)
+        preds_gt["GroundT"].append(ground_truth)
+
 
         activation = {}
         def get_act(name):
@@ -128,12 +131,7 @@ def run_CAM(net, evalloader, weight):
         x = act[None,:, :, :]
 
         cam = return_CAM(x, weight, class_idx)
-        #c = torch.as_tensor(cam)
-        #plt.imshow(c.permute(1, 2, 0))
-        #plt.imshow(cam[0], alpha=0.5, cmap='jet')
-        #plt.show()
         t = transforms.Resize((128,128),interpolation=Image.NEAREST)
-        #t_img = t(img)
         a = image.squeeze()
         print(a.shape)
         plt.imshow(a.permute(1, 2, 0))
@@ -142,7 +140,7 @@ def run_CAM(net, evalloader, weight):
         trans = t(act)
 
         img_activations.append(trans)
-    create_fig(img_activations)
+    create_fig(img_activations, preds_gt)
 
 
 if __name__ == '__main__':
