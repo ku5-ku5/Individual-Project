@@ -18,7 +18,7 @@ warnings.filterwarnings("ignore")
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
-def retrieveData(dataDir, classes, img_total):
+def retrieveData(dataDir, classes):
 
 	#Pre-process the images in the dataset:
 	#1) resize to 32x32
@@ -29,7 +29,6 @@ def retrieveData(dataDir, classes, img_total):
 
 	#read in the dataset and apply the previously defined transormations to it
 	dataset = ImageFolder(root=dataDir, transform=image_transforms)
-
 	dataset.class_idx = {}
 
 	for i in range(0, len(classes)):
@@ -39,12 +38,11 @@ def retrieveData(dataDir, classes, img_total):
 	idx_class = {val: key for key, val in dataset.class_idx.items()}
 
 	# count the number of images in each class
-	def get_dist(dataset_obj):
+	def get_dist(dataset_):
 	    count = {}
 	    for i in range(0, len(classes)):
 	    	count[classes[i]] = 0
-
-	    for element in dataset_obj:
+	    for element in dataset_:
 	    	lbl_idx = element[1]
 	    	lbl_idx = idx_class[lbl_idx]
 	    	count[lbl_idx] += 1
@@ -55,15 +53,17 @@ def retrieveData(dataDir, classes, img_total):
 	for i in class_dist.keys():
 		print(i + ": " + str(class_dist[i]))
 
+	img_total = len(dataset)
 	train_split = round(0.85 * img_total)
 	test_split = img_total - train_split
 
 	train_dataset, test_dataset = random_split(dataset, (train_split, test_split))
 
 	train_loader = DataLoader(dataset=train_dataset, shuffle=True, batch_size=4, num_workers=2)
-	test_loader = DataLoader(dataset=test_dataset, shuffle=False, batch_size=4, num_workers=2)
-	print("Length of the train_loader:", len(train_loader))
-	print("Length of the test_loader:", len(test_loader))
+	test_loader = DataLoader(dataset=test_dataset, shuffle=True, batch_size=4, num_workers=2)
+
+	print("Number of training data batches:", len(train_loader))
+	print("Number of test data batches:", len(test_loader))
 
 	return(train_loader, train_loader)
 
