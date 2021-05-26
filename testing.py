@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import torch
 import torchvision
 from torch.autograd import Variable
-
+from datetime import datetime
 import PIL
 from PIL import Image
 from net import *
@@ -37,7 +37,7 @@ def confusion_matrix(net, testloader):
 	        outputs = net(images)
 	        _, predicted = torch.max(outputs.data, 1)
 
-	        for i in range(images.size()[0]):
+	        for i in range(predicted.size()[0]):
 	        	if predicted[i].item() == 1 and labels[i].item() == 1:
 
 	        		#Identify true positive
@@ -56,7 +56,7 @@ def confusion_matrix(net, testloader):
 	        		matrix[1][0] += 1
 	return(matrix)
 
-def generate_heatmap(conf_matrix):
+def generate_heatmap(conf_matrix, filename):
 	'''
 	[tp, fp
 	 tn, fn]
@@ -68,8 +68,12 @@ def generate_heatmap(conf_matrix):
 	plt.xticks(ticks=np.arange(len(x_vals)),labels=x_vals)
 	plt.yticks(ticks=np.arange(len(y_vals)),labels=y_vals)
 
-	plt.imshow(conf_matrix, cmap='hot',interpolation="nearest")
+	plt.imshow(conf_matrix, cmap='hot', interpolation="nearest")
+	now = datetime.now()
+	dt_string = now.strftime("%d%m%Y%H%M%S")
+	plt.savefig("./figures/" + filename + "_" + dt_string + ".png")
 	plt.show()
+
 
 
 

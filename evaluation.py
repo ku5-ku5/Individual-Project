@@ -57,7 +57,8 @@ def retrieveImages(data_dir):
 def return_CAM(feature_conv, weight, class_idx):
         size_upsample = (256, 256)
         bz, nc, h, w = feature_conv.shape
-        cam = weight.dot(feature_conv.reshape((nc, h*w)))
+
+        cam = weight.dot(feature_conv.cpu().reshape((nc, h*w)))
 
         # reshape CAM to match dimensions of activation images
         cam = cam.reshape(h, w)
@@ -137,7 +138,7 @@ def run_CAM(net, evalloader, weight, title):
         t = transforms.Resize((256,256),interpolation=Image.NEAREST)
         img = image.squeeze()
         img_trans = t(img)
-        plt.imshow(img_trans.permute(1, 2, 0))
+        plt.imshow(img_trans.cpu().permute(1, 2, 0))
         plt.imshow(skimage.transform.resize(cam[0], img_trans.shape[1:3]), alpha=0.5, cmap='jet');
 
         now = datetime.now()
@@ -157,7 +158,7 @@ if __name__ == '__main__':
     net = Net()
     net.to(device)
 
-    net.load_state_dict(torch.load('masked_model.pth', map_location=torch.device(device)))
+    net.load_state_dict(torch.load('masked.pth', map_location=torch.device(device)))
 
     weight_softmax_params = list(net._modules.get('conv1').parameters())
     weight_softmax = np.squeeze(weight_softmax_params[-1].cpu().data.numpy())
@@ -170,6 +171,12 @@ if __name__ == '__main__':
 
     run_CAM(net, evalloader, weight_softmax, "Masked Model")
 
-    #net.load_state_dict(torch.load('unmasked_model.pth', map_location=torch.device(device)))
+    net = Net()
+    net.to(device)
 
-    #run_CAM(net, evalloader, weight_softmax, "Unmasked Model")
+    net.load_state_dict(torch.load('unmasked.pth', map_location=torch.device(device)))
+
+    weight_softmax_params = list(net._modules.get('conv1').parameters())
+    weight_softmax = np.squeeze(weight_softmax_params[-1].cpu().data.numpy())
+
+    run_CAM(net, evalloader, weight_softmax, "Unmasked Model")

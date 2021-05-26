@@ -31,10 +31,10 @@ if __name__ == '__main__':
 	lossFn = nn.CrossEntropyLoss()
 
 	#train masked model
-	train(masked_model, lossFn, mask_optimiser, masked_classes, mask_train, 1, "Masked")
+	train(masked_model, lossFn, mask_optimiser, masked_classes, mask_train, 5, "Masked", True)
 
 	#train unmasked model
-	train(unmasked_model, lossFn, face_optimiser, maskless_classes, face_train, 1, "Unmasked")
+	train(unmasked_model, lossFn, face_optimiser, maskless_classes, face_train, 5, "Unmasked", True)
 
 
 	print('Training Complete')
@@ -50,6 +50,12 @@ if __name__ == '__main__':
 	unmasked_face = confusion_matrix(unmasked_model, face_test)
 
 	matrices = {"Masked" : [masked_mask, masked_face], "Unmasked" : [unmasked_mask ,unmasked_face]}
+
+	#generate heatmaps
+	generate_heatmap(masked_mask, "masked_mask")
+	generate_heatmap(unmasked_mask, "unmasked_mask")
+	generate_heatmap(masked_face, "masked_face")
+	generate_heatmap(unmasked_face, "unmasked_face")
 
 	def calc_stats(conf_matrix):
 		#calculate precision
