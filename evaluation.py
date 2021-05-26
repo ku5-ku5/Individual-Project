@@ -67,11 +67,12 @@ def return_CAM(feature_conv, weight, class_idx):
         return [cam_img]
 
 
-def create_fig(img_activations, preds_gt, batch_size=5):
+def create_fig(img_activations, preds_gt, title, batch_size=5):
     img_batch = [img_activations[i:i + batch_size] for i in range(0, len(img_activations), batch_size)]
     index = 0
     for img_list in img_batch:
         fig, plots = plt.subplots(6, len(img_list), figsize=(10, 10))
+        fig.suptitle(title)
         for i in range(0, len(img_list)):
             if preds_gt["Predicted"][((index * batch_size) + i)] == preds_gt["GroundT"][((index * batch_size) + i)]:
                 colour = "green"
@@ -85,10 +86,10 @@ def create_fig(img_activations, preds_gt, batch_size=5):
         index += 1
         now = datetime.now()
         dt_string = now.strftime("%d%m%Y%H%M%S")
-        fig.savefig("./figures/" + dt_string + ".png")
+        fig.savefig("./figures/" + title + "_" + dt_string + ".png")
 
 
-def run_CAM(net, evalloader, weight):
+def run_CAM(net, evalloader, weight, title):
     net.eval()
     img_activations = []
     predictions = []
@@ -118,6 +119,8 @@ def run_CAM(net, evalloader, weight):
 
 
         activation = {}
+
+        # Used to retrieve indivudual activations
         def get_act(name):
             def act_hook(model, input, output):
                     activation[name] = output.detach()
@@ -131,16 +134,21 @@ def run_CAM(net, evalloader, weight):
         x = act[None,:, :, :]
 
         cam = return_CAM(x, weight, class_idx)
-        t = transforms.Resize((128,128),interpolation=Image.NEAREST)
-        a = image.squeeze()
-        print(a.shape)
-        plt.imshow(a.permute(1, 2, 0))
-        plt.imshow(skimage.transform.resize(cam[0], a.shape[1:3]), alpha=0.5, cmap='jet');
+        t = transforms.Resize((256,256),interpolation=Image.NEAREST)
+        img = image.squeeze()
+        img_trans = t(img)
+        plt.imshow(img_trans.permute(1, 2, 0))
+        plt.imshow(skimage.transform.resize(cam[0], img_trans.shape[1:3]), alpha=0.5, cmap='jet');
+
+        now = datetime.now()
+        dt_string = now.strftime("%d%m%Y%H%M%S")
+        plt.savefig("./figures/" + title + "_" + dt_string + ".png")
         plt.show()
+
         trans = t(act)
 
         img_activations.append(trans)
-    create_fig(img_activations, preds_gt)
+    create_fig(img_activations, preds_gt, title)
 
 
 if __name__ == '__main__':
@@ -160,8 +168,8 @@ if __name__ == '__main__':
 
     evalloader = retrieveImages('./data/evaluation')
 
-    run_CAM(net, evalloader, weight_softmax)
+    run_CAM(net, evalloader, weight_softmax, "Masked Model")
 
     #net.load_state_dict(torch.load('unmasked_model.pth', map_location=torch.device(device)))
 
-    #run_CAM(net, evalloader, weight_softmax)
+    #run_CAM(net, evalloader, weight_softmax, "Unmasked Model")

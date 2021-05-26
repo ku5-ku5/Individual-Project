@@ -13,7 +13,7 @@ if __name__ == '__main__':
 	mask_train, mask_test = retrieveData("./data/training/mask_training", masked_classes)
 	
 	face_train, face_test = retrieveData("./data/training//maskless_training", maskless_classes)
-'''
+
 	#epochs = input("Enter number of epochs: ")
 
 	#defining neural networks
@@ -77,4 +77,4 @@ if __name__ == '__main__':
 			out += "\nPrecision: " + str(p) + "\nRecall: " + str(r) + "\nF1: " + str(f1) + "\n"
 		print(out)
 		file.write(out + "\n\n")
-		file.close()'''
+		file.close()
