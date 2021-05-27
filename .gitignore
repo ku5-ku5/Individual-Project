@@ -1,6 +1,4 @@
 citation.txt
-masked_results.txt
-unmasked_results.txt
 other_stuff/*
 __pycache__/*
 ImageFolder/*
