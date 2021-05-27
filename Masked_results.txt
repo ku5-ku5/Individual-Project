@@ -1,0 +1,69 @@
+Date: 26/05/2021
+Time: 22:21:39
+######################### Masked Training Results #########################
+
+
+Epoch: 1
+Accuracy: 84.59556929417826
+loss: 0.6044379296177834
+Accuracy of negative_data: 74.57499055534568
+Accuracy of with_mask: 92.9471032745592
+
+Training Iteration Duration: 15.062395572662354 Seconds
+
+Epoch: 2
+Accuracy: 87.06852138073158
+loss: 0.3447659965073639
+Accuracy of negative_data: 77.63505855685682
+Accuracy of with_mask: 94.93073047858942
+
+Training Iteration Duration: 14.636300563812256 Seconds
+
+Epoch: 3
+Accuracy: 89.90211231324061
+loss: 0.29465022331722857
+Accuracy of negative_data: 92.97317718171514
+Accuracy of with_mask: 87.3425692695214
+
+Training Iteration Duration: 13.840121269226074 Seconds
+
+Epoch: 4
+Accuracy: 90.1081916537867
+loss: 0.2675889973272186
+Accuracy of negative_data: 87.608613524745
+Accuracy of with_mask: 92.19143576826197
+
+Training Iteration Duration: 14.778332710266113 Seconds
+
+Epoch: 5
+Accuracy: 90.5890434483943
+loss: 0.24802851768046302
+Accuracy of negative_data: 95.4665659236872
+Accuracy of with_mask: 86.52392947103274
+
+Training Iteration Duration: 13.975149631500244 Seconds
+
+
+######################### Masked Testing Results #########################
+
+Masked Dataset
+
+
+True Positives: 2748
+False Positives: 120
+False Negatives: 428
+True Negatives: 2527
+Precision: 0.8652392947103275
+Recall: 0.9581589958158996
+F1: 0.9093315684976836
+Unmasked Dataset
+
+
+True Positives: 1968
+False Positives: 130
+False Negatives: 1293
+True Negatives: 2520
+Precision: 0.6034958601655934
+Recall: 0.9380362249761678
+F1: 0.7344653853330846
+
